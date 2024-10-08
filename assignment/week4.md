@@ -87,3 +87,6 @@ DATE와 무관하게 TIME만 표시하는 데이터
 UTC로부터 경과한 값. 결과값 맨 뒤에 UTC가 나옴
 
 ![week4_7](./img/week4_7.png)
+
+![week4_8](./img/week4_8.png)
+
