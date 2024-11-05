@@ -16,7 +16,7 @@
 ## 4-5. 시간데이터 연습문제 1~2번
 ### 1. 트레이너가 포켓몬을 포획한 날짜(catch_date)를 기준으로, 2023년 1월에 포획한 포켓몬의 수를 계산해주세요.
 ![week5_1](./img/week5_1.png)
->>요청 한 사람 또는 문제를 그대로 볼 경우에 틀릴 수 있다. 컬럼을 꼭 파악하고 쿼리를 작성하자!
+>요청 한 사람 또는 문제를 그대로 볼 경우에 틀릴 수 있다. 컬럼을 꼭 파악하고 쿼리를 작성하자!
 
 데이터 타입이 제대로 저장되어있는지, 타임존이 제대로 설정 되어 있는지 확인하기
 컬럼의 설명을 꼭 확인하고 SQL을 작성해야 한다!
@@ -119,6 +119,6 @@ IF(조건문, True일 때의 값, False일 때의 값)AS 새로운_컬럼_이름
 
 * 꼭 봐여한다기보단 잘못된 경우나 과거 문법인 경우가 존재하므로 공식문서를 확인해볼 수 있어야 함!
 * RSS Feed 구독!
->>fedd subscirbe https://cloud.google.com/feeds/bigquery-release-notes.xml
+>fedd subscirbe https://cloud.google.com/feeds/bigquery-release-notes.xml
 
 ![week5_12](./img/week5_12.png)
