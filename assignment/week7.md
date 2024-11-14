@@ -34,7 +34,7 @@ SQL 스타일 가이드, Mozila(firefox)의 SQL 스타일 가이드 참고 가�
 * Big Query는 마지막 쉼표를 무시하므로 뒤에 작성해도 무방
 
 ## 6-3. 가독성을 챙기기 위한 WITH 문 & 파티션
-## WITH 구문
+### WITH 구문
 * CTE라고 표현
 * SELECT 구문에 이름을 정해주는 것과 유사
 * 쿼리 재정의, 재사용 가능
@@ -53,7 +53,7 @@ SELECT
     col
 FROM name_a
 ```
-## PARTITION
+### PARTITION
 * Table에 Partition이란 것이 존재할 수 있음
 * 쿼리 성능 향상, 파티션을 설정한 곳만 스캔하면 속도 향상
 * 데이터 관리 용이성, 변경과 삭제가 용이함
