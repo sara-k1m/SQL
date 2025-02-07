@@ -1,0 +1,11 @@
+SELECT DISTINCT 
+       D.ID, 
+       D.EMAIL, 
+       D.FIRST_NAME, 
+       D.LAST_NAME
+FROM DEVELOPERS D
+JOIN SKILLCODES S
+    ON (D.SKILL_CODE & S.CODE) > 0
+    -- 비트 연산자 &로 CODE 값이 겹치는지 확인
+WHERE S.CATEGORY = 'Front End'
+ORDER BY D.ID;
