@@ -168,7 +168,7 @@ SELECT *
 FROM tips
 WHERE (SELECT AVG(total_bill) FROM tips) < total_bill
 ```
-![문제1](/image/week0_1.png)
+![문제1](Manual/image/week0_1.png)
 
 ### 문제2 레스토랑의 대목
 ```sql
@@ -179,4 +179,4 @@ WHERE day IN (SELECT day
               GROUP BY day
               HAVING SUM(total_bill) >= 1500)
 ```
-![문제2](/image/week0_2.png)
+![문제2](Manual/image/week0_2.png)
