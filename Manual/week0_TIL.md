@@ -162,15 +162,15 @@ SELECT ...;
 ---
 
 ## 📝 문제 풀이
-### 문제1 많이 주문한 테이블 찾기
+### 문제1. 많이 주문한 테이블 찾기
 ```sql
 SELECT *
 FROM tips
 WHERE (SELECT AVG(total_bill) FROM tips) < total_bill
 ```
-![문제1](Manual/image/week0_1.png)
+<img src="./image/week0_1.png" width="500"/>
 
-### 문제2 레스토랑의 대목
+### 문제2. 레스토랑의 대목
 ```sql
 SELECT *
 FROM tips
@@ -179,4 +179,4 @@ WHERE day IN (SELECT day
               GROUP BY day
               HAVING SUM(total_bill) >= 1500)
 ```
-![문제2](Manual/image/week0_2.png)
+<img src="./image/week0_2.png" width="500"/>
