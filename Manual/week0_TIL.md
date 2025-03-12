@@ -7,7 +7,6 @@
 - 가독성이 뛰어나며, SQL이 **"구조적(Structured)"** 언어로 불리는 이유 중 하나  
 - `SELECT, INSERT, UPDATE, DELETE, SET, DO` 문에서 사용 가능  
 
----
 ### 15.2.15.2 Comparisons Using Subqueries  
 - 서브쿼리는 비교 연산자(`=, >, <, >=, <=, <>, !=, <=>`)와 함께 사용 가능  
 - 서브쿼리 결과를 비교할 때, **반환되는 값이 단일 값이어야 함**  
@@ -20,7 +19,6 @@
   WHERE 2 = (SELECT COUNT(*) FROM t1 WHERE t1.id = t.id);
   ```
 
----
 ### 15.2.15.3 Subqueries with ANY, IN, or SOME  
 - `ANY`는 **서브쿼리에서 반환된 값 중 하나라도 조건을 만족하면 TRUE**  
   ```sql
@@ -43,7 +41,6 @@
   SELECT s1 FROM t1 WHERE s1 NOT IN (SELECT s1 FROM t2);
   ```
 
----
 ### 15.2.15.6 Subqueries with EXISTS or NOT EXISTS  
 - `EXISTS`는 **서브쿼리가 하나 이상의 행을 반환하면 TRUE**  
   ```sql
@@ -62,7 +59,6 @@
   );
   ```
 
----
 ### 15.2.15.10 Subquery Errors  
 서브쿼리에서 발생할 수 있는 주요 오류:  
 1. **지원되지 않는 서브쿼리 문법**  
@@ -93,4 +89,94 @@
    ```
    - 동일한 테이블을 `UPDATE` 하면서 서브쿼리에서 참조하면 오류 발생
   
-  
+## ⭐️ 15.2.20 WITH (Common Table Expressions)  
+
+CTE (Common Table Expression)는 **하나의 SQL 문 내에서만 존재하는 임시 결과 집합**으로, 해당 문장에서 여러 번 참조할 수 있다.  
+
+### 📌 CTE 정의 및 사용법  
+CTE는 `WITH` 절을 사용하여 정의되며, 이후 SQL 문에서 참조할 수 있다.  
+
+```sql
+WITH
+  cte1 AS (SELECT a, b FROM table1),
+  cte2 AS (SELECT c, d FROM table2)
+SELECT b, d FROM cte1 JOIN cte2
+WHERE cte1.a = cte2.c;
+```
+
+- `cte1`과 `cte2`라는 두 개의 CTE를 선언  
+- 이후 `SELECT` 문에서 `cte1`과 `cte2`를 조인하여 활용  
+
+
+### 📌 CTE 컬럼명 결정  
+아래 두 쿼리는 동일하게 동작한다.  
+
+```sql
+WITH cte (col1, col2) AS
+(
+  SELECT 1, 2
+  UNION ALL
+  SELECT 3, 4
+)
+SELECT col1, col2 FROM cte;
+```
+```sql
+WITH cte AS
+(
+  SELECT 1 AS col1, 2 AS col2
+  UNION ALL
+  SELECT 3, 4
+)
+SELECT col1, col2 FROM cte;
+```
+- `WITH cte (col1, col2) AS (...)`처럼 컬럼명을 직접 지정할 수도 있고,  
+- `SELECT` 문 내에서 `AS`를 사용해 컬럼명을 설정할 수도 있다.  
+
+
+### 📌 CTE 사용 가능 문법  
+CTE는 다음과 같은 SQL 문에서 사용 가능하다.  
+`SELECT`  `UPDATE`   `DELETE`   `서브쿼리 내부`
+
+
+### 📌 CTE 사용시 주의할 점 
+동일한 수준에서 두 개의 `WITH` 절을 사용할 수 없음  
+```sql
+WITH cte1 AS (...)
+WITH cte2 AS (...)  -- 🚨 오류 발생
+SELECT ...;
+```
+
+동일한 `WITH` 절 내에서 중복된 CTE 이름을 사용할 수 없음  
+```sql
+WITH cte1 AS (...),
+     cte1 AS (...)  -- 🚨 오류 발생 (중복된 CTE 이름)
+SELECT ...;
+```
+✅ 올바른 코드  
+```sql
+WITH cte1 AS (...), 
+     cte2 AS (...) 
+SELECT ...;
+```
+
+---
+
+## 📝 문제 풀이
+### 문제1 많이 주문한 테이블 찾기
+```sql
+SELECT *
+FROM tips
+WHERE (SELECT AVG(total_bill) FROM tips) < total_bill
+```
+![문제1](/image/week0_1.png)
+
+### 문제2 레스토랑의 대목
+```sql
+SELECT *
+FROM tips
+WHERE day IN (SELECT day 
+              FROM tips 
+              GROUP BY day
+              HAVING SUM(total_bill) >= 1500)
+```
+![문제2](/image/week0_2.png)
