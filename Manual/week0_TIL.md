@@ -8,7 +8,16 @@
 - `SELECT, INSERT, UPDATE, DELETE, SET, DO` 문에서 사용 가능  
 
 ### 15.2.15.2 Comparisons Using Subqueries  
-- 서브쿼리는 비교 연산자(`=, >, <, >=, <=, <>, !=, <=>`)와 함께 사용 가능  
+- 서브쿼리는 비교 연산자(`=, >, <, >=, <=, <>, !=, <=>`)와 함께 사용 가능   
+    - **<=> 연산자**
+      ```sql
+      SELECT NULL <=> NULL;  -- TRUE 반환
+      SELECT NULL <=> 'value';  -- FALSE 반환
+      SELECT 'value' <=> 'value';  -- TRUE 반환
+  
+      ```
+      - NULL 값을 포함한 비교에서 항상 TRUE 또는 FALSE를 반환해야 하는 경우에 유용하다.   
+      - 두 테이블을 조인할 때 NULL 값을 포함한 열을 비교해야 하는 경우 <=> 연산자를 사용하면 편리하다.   
 - 서브쿼리 결과를 비교할 때, **반환되는 값이 단일 값이어야 함**  
   ```sql
   SELECT * FROM t1 WHERE column1 = (SELECT MAX(column2) FROM t2);
