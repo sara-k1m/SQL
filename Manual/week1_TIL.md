@@ -14,7 +14,7 @@
 ### 윈도우 함수로 사용 가능한 집계 함수  
 - AVG(), COUNT(), MAX(), MIN(), SUM() 등 다수  
 - OVER 절이 붙으면 윈도우 함수, 없으면 일반 집계 함수로 작동
-- 
+  
 ### 윈도우 함수 전용 함수 (OVER 필수)
 - RANK(), DENSE_RANK(), ROW_NUMBER()  
 - LAG(), LEAD(), FIRST_VALUE(), LAST_VALUE() 등
@@ -77,7 +77,11 @@ WINDOW w1 AS (w2), w2 AS (w3), w3 AS (w1);
 ## 📝 문제 풀이
 ### 문제1. Rank Scores
 ```sql
-
+SELECT score,
+DENSE_RANK() OVER (ORDER BY score DESC) AS 'rank'
+-- DENSE_RANK()에서는 같은 값, 중복값의 존재나 갯수와 관계없이 무조건 1씩 차례로 증가
+FROM Scores
+ORDER BY score DESC;
 ```
 <img src="./image/week1_1.png" width="500"/>
 
