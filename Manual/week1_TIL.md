@@ -2,146 +2,61 @@
 
 윈도우 함수는 집계 함수와 유사하지만, **각 행에 대해 결과를 반환**하는 것이 특징이다.
 
----
-
-### 📌 개념 요약
+### 📌 윈도우 함수 주요 특징
 
 - 집계 함수는 여러 행을 하나의 결과 행으로 반환하지만, 윈도우 함수는 각 행마다 결과를 반환한다.
-- 현재 계산 중인 행을 current row, 관련된 행 집합을 window 라고 한다.
-- `OVER()` 절을 통해 윈도우의 범위와 기준을 설정할 수 있다.
+- 현재 계산 중인 행을 현재 행(current row), 그와 관련된 행 집합을 윈도우(window) 라고 한다.
+- 윈도우 함수는 OVER() 절과 함께 사용되며, PARTITION BY, ORDER BY, ROWS 등을 지정하여 동작 범위를 설정할 수 있다.
 
-```sql
-SELECT 
-  year, country, product, profit,
-  SUM(profit) OVER() AS total_profit,
-  SUM(profit) OVER(PARTITION BY country) AS country_profit
-FROM sales
-ORDER BY country, year, product, profit;
-```
+### 윈도우 함수 처리 순서  
+- FROM → WHERE → GROUP BY → HAVING → **WINDOW** → ORDER BY → LIMIT → SELECT DISTINCT
 
-### `ROW_NUMBER()`와 정렬 비교
-
-```sql
-SELECT
-  year, country, product, profit,
-  ROW_NUMBER() OVER(PARTITION BY country) AS row_num1,
-  ROW_NUMBER() OVER(PARTITION BY country ORDER BY year, product) AS row_num2
-FROM sales;
-```
+### 윈도우 함수로 사용 가능한 집계 함수  
+- AVG(), COUNT(), MAX(), MIN(), SUM() 등 다수  
+- OVER 절이 붙으면 윈도우 함수, 없으면 일반 집계 함수로 작동
+- 
+### 윈도우 함수 전용 함수 (OVER 필수)
+- RANK(), DENSE_RANK(), ROW_NUMBER()  
+- LAG(), LEAD(), FIRST_VALUE(), LAST_VALUE() 등
 
 ---
 
 ## ⭐️ 14.20.1 Window Function Descriptions
 
-### `CUME_DIST()` / `PERCENT_RANK()` 예시
+윈도우 전용 함수는 `OVER()` 절과 함께 반드시 사용해야 하며, 각 함수는 현재 행을 중심으로 관련 행들과의 관계를 계산한다.
 
-```sql
-SELECT
-  val,
-  ROW_NUMBER()   OVER w AS 'row_number',
-  CUME_DIST()    OVER w AS 'cume_dist',
-  PERCENT_RANK() OVER w AS 'percent_rank'
-FROM numbers
-WINDOW w AS (ORDER BY val);
-```
-
-### `FIRST_VALUE()` / `LAST_VALUE()` / `NTH_VALUE()`
-
-```sql
-SELECT
-  time, subject, val,
-  FIRST_VALUE(val)  OVER w AS 'first',
-  LAST_VALUE(val)   OVER w AS 'last',
-  NTH_VALUE(val, 2) OVER w AS 'second',
-  NTH_VALUE(val, 4) OVER w AS 'fourth'
-FROM observations
-WINDOW w AS (PARTITION BY subject ORDER BY time
-             ROWS UNBOUNDED PRECEDING);
-```
-
-### `LAG()` / `LEAD()` + 차이 계산
-
-```sql
-SELECT
-  t, val,
-  LAG(val)        OVER w AS 'lag',
-  LEAD(val)       OVER w AS 'lead',
-  val - LAG(val)  OVER w AS 'lag diff',
-  val - LEAD(val) OVER w AS 'lead diff'
-FROM series
-WINDOW w AS (ORDER BY t);
-```
-
-### `LAG()` / `LEAD()` + 피보나치 예시
-
-```sql
-SELECT
-  n,
-  LAG(n, 1, 0)      OVER w AS 'lag',
-  LEAD(n, 1, 0)     OVER w AS 'lead',
-  n + LAG(n, 1, 0)  OVER w AS 'next_n',
-  n + LEAD(n, 1, 0) OVER w AS 'next_next_n'
-FROM fib
-WINDOW w AS (ORDER BY n);
-```
-
-### `RANK()` / `DENSE_RANK()` / `ROW_NUMBER()`
-
-```sql
-SELECT
-  val,
-  ROW_NUMBER() OVER w AS 'row_number',
-  RANK()       OVER w AS 'rank',
-  DENSE_RANK() OVER w AS 'dense_rank'
-FROM numbers
-WINDOW w AS (ORDER BY val);
-```
+### 대표 함수
+- `ROW_NUMBER()`: 각 파티션 내 고유 행 번호
+- `RANK()`: 동일값은 동일 순위, 건너뜀
+- `DENSE_RANK()`: 동일값은 동일 순위, 건너뛰지 않음
+- `LAG()`, `LEAD()`: 현재 행 기준으로 이전/다음 행의 값을 가져옴
+- `FIRST_VALUE()`, `LAST_VALUE()`: 프레임 내 처음/마지막 값
+- `NTH_VALUE(expr, N)`: 프레임 내 N번째 값
+- `CUME_DIST()`: 누적 분포 백분율 (0~1)
+- `PERCENT_RANK()`: (순위 - 1) / (전체 행 수 - 1)
+- `NTILE(N)`: 파티션을 N개의 그룹으로 나눠 그룹 번호 반환
 
 ---
 
 ## ⭐️ 14.20.4 Named Windows
+`WINDOW` 절을 사용하면 동일한 `OVER()` 정의를 재사용할 수 있어 **중복을 줄이고 유지보수성을 높일 수 있다.**
 
-### 동일 윈도우 정의를 재사용하지 않은 방식
-
+### 📌 문법
 ```sql
-SELECT
-  val,
-  ROW_NUMBER() OVER (ORDER BY val) AS 'row_number',
-  RANK()       OVER (ORDER BY val) AS 'rank',
-  DENSE_RANK() OVER (ORDER BY val) AS 'dense_rank'
-FROM numbers;
+WINDOW w AS (PARTITION BY country ORDER BY year)
 ```
 
-### `WINDOW` 절 사용 방식
+- `WINDOW` 절은 `HAVING`과 `ORDER BY` 사이에 위치하며, 하나 이상의 윈도우를 이름으로 정의 가능하다.
+- `OVER w` 형태로 간단하게 참조할 수 있으며, 필요한 경우 `OVER (w ORDER BY ...)`처럼 일부 속성을 추가해 확장할 수도 있다.
+- 단, 이미 정의된 속성과 동일한 속성을 중복 정의할 수는 없다.
 
-```sql
-SELECT
-  val,
-  ROW_NUMBER() OVER w AS 'row_number',
-  RANK()       OVER w AS 'rank',
-  DENSE_RANK() OVER w AS 'dense_rank'
-FROM numbers
-WINDOW w AS (ORDER BY val);
-```
-
-### `OVER (window_name ...)` 확장 사용 예시
-
-```sql
-SELECT
-  DISTINCT year, country,
-  FIRST_VALUE(year) OVER (w ORDER BY year ASC) AS first,
-  FIRST_VALUE(year) OVER (w ORDER BY year DESC) AS last
-FROM sales
-WINDOW w AS (PARTITION BY country);
-```
-
-### `WINDOW` 참조 규칙 예시
+### `WINDOW` 참조 규칙
 
 ```sql
 -- 허용되는 참조
 WINDOW w1 AS (w2), w2 AS (), w3 AS (w1);
 
--- 순환 참조: 허용되지 않음
+-- 순환 참조 금지(아래)
 WINDOW w1 AS (w2), w2 AS (w3), w3 AS (w1);
 ```
 ---
@@ -157,6 +72,7 @@ WINDOW w1 AS (w2), w2 AS (w3), w3 AS (w1);
 - `ROWS` / `RANGE`: 프레임 범위 지정 (기본값: `RANGE UNBOUNDED PRECEDING TO CURRENT ROW`)
 
 > `over_clause`는 윈도우 함수 또는 집계 함수에서 반드시 사용되며, 윈도우 계산 방식 지정에 사용된다.
+
 ---
 ## 📝 문제 풀이
 ### 문제1. Rank Scores
