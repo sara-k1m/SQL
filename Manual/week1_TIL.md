@@ -9,7 +9,7 @@
 - 윈도우 함수는 OVER() 절과 함께 사용되며, PARTITION BY, ORDER BY, ROWS 등을 지정하여 동작 범위를 설정할 수 있다.
 
 ### 윈도우 함수 처리 순서  
-- FROM → WHERE → GROUP BY → HAVING → **WINDOW** → ORDER BY → LIMIT → SELECT DISTINCT
+- 윈도우 함수가 WHERE 절보다 나중에 처리된다!
 
 ### 윈도우 함수로 사용 가능한 집계 함수  
 - AVG(), COUNT(), MAX(), MIN(), SUM() 등 다수  
