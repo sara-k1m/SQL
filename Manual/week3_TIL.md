@@ -122,12 +122,28 @@ SELECT 2 BETWEEN 2 AND 'x-3';   → 0  ('x-3'은 숫자 변환 실패)
 ## 📝 문제 풀이
 ### 문제1. Type of Triangle   
 ```sql
+SELECT
+    CASE WHEN (A+B <= C OR A+C <= B OR B+C <= A)THEN 'Not A Triangle'
+    WHEN (A=B AND B=C) THEN 'Equilateral'
+    WHEN (A=B OR B=C OR C=A)THEN 'Isosceles'
+    ELSE 'Scalene'
+    END AS 'Type of Triangle'
+FROM TRIANGLES
 
+-- 삼각형 조건 순서에 주의하자!!
 ```
 <img src="./image/week3_1.png" width="500"/>
 
 ### 문제2. Find Customer Referee   
 ```sql
-
+SELECT name 
+FROM Customer
+WHERE referee_id <> 2 OR referee_id IS NULL;
+-- <>와 !=는 동일
+```
+```sql
+SELECT name
+FROM Customer
+WHERE COALESCE(referee_id,0) <> 2;
 ```
 <img src="./image/week3_2.png" width="500"/>
