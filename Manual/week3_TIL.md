@@ -1,144 +1,133 @@
-## ⭐️ 15.2.13.2 JOIN Clause
+## ⭐️ 14.5 Flow Control Functions   
 
-### JOIN과 comma   
-- 조인 조건이 없는 경우 INNER JOIN과 쉼표(,)는 의미적으로 동일하며 두 테이블 간의 카티션 곱을 생성한다.
-조인 우선순위 주의
+### CASE 표현식의 타입 결정 로직
+
+- `CASE` 결과의 반환 타입은 모든 결과 값의 종합 타입에 따라 결정됨
+- 예외적인 타입 처리:
+  - `DOUBLE`이 하나라도 있으면 -> **DOUBLE**
+  - `DECIMAL`이 하나라도 있으면 -> **DECIMAL**
+  - 이외에는 INT 타입
+
+### IF(expr1, expr2, expr3)
+
+- `expr1`이 TRUE -> `expr2`, 아니면 `expr3` 반환
+- 반환 타입 결정 로직:
+  - 하나라도 문자열 → **문자열 반환**
+  - 하나라도 실수형 → **실수형 반환**
+  - 나머지는 INT형
+- expr2 또는 expr3 중 하나만 `NULL`이면 NULL이 아닌 쪽 타입을 따름
+
+### IFNULL(expr1, expr2)
+```sql
+SELECT IFNULL(1,0);
+-> 1
+SELECT IFNULL(NULL,10);
+-> 10
+SELECT IFNULL(1/0,10);
+-> 10
+SELECT IFNULL(1/0,'yes');
+-> 'yes'
+```
+
+- `expr1`이 NULL이 아니면 그대로 반환, NULL이면 `expr2` 반환
+- 두 인자의 타입 중 더 “일반적인” 타입이 반환됨  
+  → STRING > REAL > INTEGER 순
+
+- 임시 테이블에 저장 시 타입 결정에 주의 필요
+
+### NULLIF(expr1, expr2)
   ```sql
-  SELECT * FROM (SELECT 1, 2, 3) AS t1;
+  SELECT NULLIF(1,1);
+  -> NULL
+  SELECT NULLIF(1,2);
+  -> 1
   ```
+- `expr1 = expr2`일 경우 **NULL** 반환, 아니면 `expr1` 반환
+- `expr1`이 두 번 평가될 수 있으므로 **부작용 있는 표현식 주의**   
 
-- `JOIN`이 `,` (comma)보다 **우선순위가 높음**
-
-  ```sql
-  -- 오류 발생 (t1.i1은 JOIN 대상 아님)
-  SELECT * FROM t1, t2 JOIN t3 ON t1.i1 = t3.i3;
-  
-  -- 괄호로 묶어서 해결
-  SELECT * FROM (t1, t2) JOIN t3 ON t1.i1 = t3.i3;
-  
-  -- 또는 JOIN만 사용
-  SELECT * FROM t1 JOIN t2 JOIN t3 ON t1.i1 = t3.i3;
-  ```
+- `CASE`, `IF`, `IFNULL`, `NULLIF` 사용 시 **문자셋/Collation 충돌** 가능
+- 시스템 변수 사용 시:
+  - 문자셋/Collation이 다르면 `Illegal mix of collations` 오류 발생 -> CAST()로 명시적 캐스팅 필요
 
 ---
 
-## ⭐️ 14.19.3 MySQL Handling of GROUP BY
-  
-### ANY_VALUE() 함수
+## ⭐️ 14.4.2 Comparison Functions and Operators 
 
-- 집계되지 않은 컬럼이지만 MySQL에게 어느 값이든 상관없다고 명시적으로 전달할 수 있음
+- 다음 연산자들은 **스칼라뿐만 아니라 행(row) 값도 비교** 가능함:  
+  `=`, `>`, `<`, `>=`, `<=`, `<>`, `!=`
+
+- 타입 변환이 필요할 경우 `CAST()` 또는 `CONVERT()` 사용 권장
+
+- 문자열 비교는 기본적으로 **대소문자를 구분하지 않음
+
+#### `<=>` (NULL-safe equal)
+
+- NULL 비교 가능  
   ```sql
-  SELECT name, ANY_VALUE(address), MAX(age)
-  FROM t
-  GROUP BY name;
+  SELECT NULL <=> NULL;
+  → 1
+  SELECT 1 <=> NULL;
+  → 0
   ```
 
-- `GROUP BY` 없이 집계함수 `MAX()`, `SUM()` 등을 사용할 경우,  
-  **집계되지 않은 컬럼은 SELECT에 쓸 수 없음**
+#### `<>`, `!=`
+
+- 같지 않음  
+  문자열 비교 시 주의
+
+#### `BETWEEN min AND max`
+
+- `expr`이 `min 이상` 그리고 `max 이하`일 경우 `1(TRUE)`, 아니면 `0(FALSE)`
+- 내부적으로는 다음과 동일:
   ```sql
-  SELECT name, MAX(age) FROM t;
-  -- 오류 발생
+  min <= expr AND expr <= max
   ```
+- 세 인자의 타입이 다르면 MySQL의 타입 변환 규칙(14.3절 참고)을 따름
 
-  → `ANY_VALUE()`로 해결:
+```sql
+SELECT 2 BETWEEN 1 AND 3;       → 1
+SELECT 2 BETWEEN 3 AND 1;       → 0  (순서 중요)
+SELECT 'b' BETWEEN 'a' AND 'c'; → 1  (문자열 비교 가능)
+SELECT 2 BETWEEN 2 AND '3';     → 1  ('3'은 숫자 3으로 변환)
+SELECT 2 BETWEEN 2 AND 'x-3';   → 0  ('x-3'은 숫자 변환 실패)
+```
+
+#### `COALESCE(v1, v2, ...)`   
+- NULL이 아닌 첫 번째 값을 반환
+
+#### `EXISTS(subquery)`, `NOT EXISTS(subquery)`
+
+- 쿼리 결과가 **존재**하면 1, 없으면 0   
+- 쿼리 결과가 **존재하지 않으면** 1, 존재하면 0
+
+#### `GREATEST(v1, v2, ...)`
+
+- 가장 큰 값 반환  
+  NULL 포함 시 결과는 NULL
+
+#### `INTERVAL(N, N1, N2, ...)`
+- Returns 0 if N ≤ N1, 1 if N ≤ N2 and so on, or -1 if N is NULL.   
+- `N ≤ N1` → 0, `N ≤ N2` → 1, ...  
+  정수형 비교, 이진 탐색 사용   
   ```sql
-  SELECT ANY_VALUE(name), MAX(age) FROM t;
+  SELECT INTERVAL(23, 1, 15, 17, 30, 44, 200);
+  -> 3
+  SELECT INTERVAL(10, 1, 10, 100, 1000);
+  -> 2
+  SELECT INTERVAL(22, 23, 30, 44, 200);
+  -> 0
   ```
-
-### GROUP BY의 표현식 사용   
-
-- MySQL은 **비컬럼 표현식도 GROUP BY에 허용**
-  ```sql
-  SELECT id, FLOOR(value/100)
-  FROM tbl_name
-  GROUP BY id, FLOOR(value/100);
-  ```
-
-- **GROUP BY에서 별칭 사용 가능**
-  ```sql
-  SELECT id, FLOOR(value/100) AS val
-  FROM tbl_name
-  GROUP BY id, val;
-  ```
-
-### GROUP BY 내 표현식과 SELECT 표현식의 일치
-
-- GROUP BY에 사용된 표현식이 SELECT에도 동일하게 포함되면 허용
-  ```sql
-  SELECT id, FLOOR(value/100)
-  FROM tbl_name
-  GROUP BY id, FLOOR(value/100);
-  ```
-
-- 표현식 간의 함수적 종속은 자동 인식되지 않음
-  → 해결 방법: **파생 테이블(서브쿼리)** 활용
-
----
-
-## ⭐️ 15.2.13 SELECT Statement (Having)   
-HAVING 절은 GROUP BY에 의해 생성된 그룹에 대한 조건을 지정할 때 사용된다.
-WHERE 절과 유사하지만, 집계 함수 조건은 HAVING에만 사용 가능하다.
-
-### HAVING vs WHERE
-- WHERE은 집계 함수 사용 불가, HAVING은 가능
-- WHERE은 그룹화 전에 필터링, HAVING은 그룹화 후 필터링
-  ```sql
-  SELECT user, MAX(salary) FROM users
-    GROUP BY user HAVING MAX(salary) > 10;
-  ```
-
-### HAVING 절 처리 순서
-- HAVING은 거의 마지막 단계에서 처리됨 (LIMIT보다 앞)
-- 최적화가 적용되지 않음
 
 ---
 ## 📝 문제 풀이
-### 문제1. 저자 별 카테고리 별 매출액 집계하기   
+### 문제1. Type of Triangle   
 ```sql
-SELECT 
-    A.AUTHOR_ID, 
-    A.AUTHOR_NAME, 
-    B.CATEGORY, 
-    SUM(BS.SALES * B.PRICE) AS TOTAL_SALES
-FROM BOOK AS B
-JOIN BOOK_SALES AS BS ON B.BOOK_ID = BS.BOOK_ID
-JOIN AUTHOR AS A ON B.AUTHOR_ID = A.AUTHOR_ID
-WHERE BS.SALES_DATE <= '2022-01-31'
-GROUP BY B.CATEGORY, A.AUTHOR_ID, A.AUTHOR_NAME
-ORDER BY A.AUTHOR_ID, B.CATEGORY DESC;
-```
-<img src="./image/week2_1.png" width="500"/>
 
-### 문제2. 언어별 개발자 분류하기   
-```sql
-SELECT 
-    CASE
-        WHEN (SKILL_CODE & 
-                (SELECT SUM(CODE) 
-                 FROM SKILLCODES 
-                 WHERE CATEGORY LIKE 'Front%')) 
-             AND (SKILL_CODE & 
-                (SELECT CODE 
-                 FROM SKILLCODES 
-                 WHERE NAME = 'Python')) 
-        THEN 'A'
-        
-        WHEN SKILL_CODE & 
-                (SELECT CODE 
-                 FROM SKILLCODES 
-                 WHERE NAME = 'C#') 
-        THEN 'B'
-        
-        WHEN SKILL_CODE & 
-                (SELECT SUM(CODE) 
-                 FROM SKILLCODES 
-                 WHERE CATEGORY LIKE 'front%') 
-        THEN 'C'
-        
-        ELSE NULL
-    END AS GRADE, ID, EMAIL
-FROM DEVELOPERS
-HAVING GRADE IS NOT NULL
-ORDER BY GRADE, ID;
 ```
-<img src="./image/week2_2.png" width="500"/>
+<img src="./image/week3_1.png" width="500"/>
+
+### 문제2. Find Customer Referee   
+```sql
+
+```
+<img src="./image/week3_2.png" width="500"/>
