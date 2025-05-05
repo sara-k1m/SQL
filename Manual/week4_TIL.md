@@ -23,7 +23,7 @@ HAVING
   AND GROUP_CONCAT(DISTINCT NAME ORDER BY NAME) LIKE '%Yogurt%'
 ORDER BY CART_ID;
 ```
-<img src="./image/week4_1.png" width="500"/>
+<img src="./image/week4_1.png" width="600"/>
 
 ### 문제2. 언어별 개발자 분류하기
 ```sql
@@ -37,7 +37,7 @@ JOIN SKILLCODES S ON D.SKILL_CODE & S.CODE
 -- & 연산자로 스킬 포함 여부 확인
 GROUP BY D.ID, D.EMAIL;
 ```
-<img src="./image/week4_2.png" width="500"/>
+<img src="./image/week4_2.png" width="600"/>
 
 ---
 
@@ -90,4 +90,4 @@ LEFT JOIN ANIMAL_OUTS AO ON H.HOUR = HOUR(AO.DATETIME)
 GROUP BY H.HOUR
 ORDER BY H.HOUR;
 ```
-<img src="./image/week4_3.png" width="500"/>
+<img src="./image/week4_3.png" width="600"/>
