@@ -50,14 +50,15 @@ GROUP BY D.ID, D.EMAIL;
 - 다른 테이블과의 조인은 가능하지만, CTE는 LEFT JOIN의 우측에 위치해서는 안 됨
 - 재귀 SELECT에서는 CTE 내부의 열 이름으로만 값을 참조하며, 열 위치(index)로 참조할 수 없음
 
+
   ```sql
   WITH RECURSIVE cte (n) AS
-(
+  (
   SELECT 1
   UNION ALL
   SELECT n + 1 FROM cte WHERE n < 5
-)
-SELECT * FROM cte;
+  )
+  SELECT * FROM cte;
   ```
 
 The recursive SELECT part는 아래 constructs을 포함해서는 안됨
