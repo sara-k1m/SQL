@@ -16,35 +16,26 @@
 ### 문제3. 세 명이 서로 친구인 관계 찾기
 ```sql
 WITH ab AS (
-  SELECT E1.user_a_id, E1.user_b_id, E2.user_b_id AS user_c_id
-  FROM edges AS E1
-  JOIN edges AS E2 
-    ON E1.user_b_id = E2.user_a_id
+  -- A → B → C 경로 생성: A가 B와 친구이고, B가 C와 친구인 경우
+  SELECT e1.user_a_id AS a, e1.user_b_id AS b, e2.user_b_id AS c
+  FROM edges e1
+  JOIN edges e2 ON e1.user_b_id = e2.user_a_id
 ),
-ac AS (
-  -- A-C 관계를 두 방향으로 나눠서 성능 개선
-  SELECT ab.user_a_id, ab.user_b_id, ab.user_c_id
+triangles AS (
+  -- A와 C도 친구인 경우만 필터링 (A-C는 대칭이므로 양 방향 모두 확인)
+  SELECT a, b, c
   FROM ab
-  JOIN edges AS E3
-    ON ab.user_a_id = E3.user_a_id AND ab.user_c_id = E3.user_b_id
-
-  UNION ALL
-
-  SELECT ab.user_a_id, ab.user_b_id, ab.user_c_id
-  FROM ab
-  JOIN edges AS E3
-    ON ab.user_a_id = E3.user_b_id AND ab.user_c_id = E3.user_a_id
+  JOIN edges e ON (a = e.user_a_id AND c = e.user_b_id)
+              OR (a = e.user_b_id AND c = e.user_a_id)
 ),
 filtered AS (
-  -- 중복된 세 친구 관계를 제외
-  SELECT DISTINCT *
-  FROM ac
-  WHERE user_a_id < user_b_id AND user_b_id < user_c_id
+  SELECT *
+  FROM triangles
+  WHERE a < b AND b < c
 )
 
 SELECT *
 FROM filtered
-WHERE 3820 IN (user_a_id, user_b_id, user_c_id);
-
+WHERE 3820 IN (a, b, c);
 ```
 <img src="./image/week6_3.png" width="600"/>
