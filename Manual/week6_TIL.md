@@ -40,9 +40,9 @@ ORDER BY order_month;
 ### 문제3. 세 명이 서로 친구인 관계 찾기
 ```sql
 SELECT
-  A.user_a_id,    -- A: 삼각형의 시작 노드
-  B.user_a_id AS user_b_id,     -- B: 중간 노드 (A의 친구)
-  B.user_b_id AS user_c_id      -- C: 삼각형의 끝 노드 (B의 친구)
+  A.user_a_id,
+  B.user_a_id AS user_b_id,
+  B.user_b_id AS user_c_id
 FROM edges A
 -- A와 B가 친구
 JOIN edges B ON A.user_b_id = B.user_a_id
